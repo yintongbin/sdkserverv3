@@ -357,58 +357,36 @@ public class MycardPayService {
         return "OK";
     }
 
-    public String doDiff(String body) {
-        String result = "";
-        List<Map<String, Object>> results = null;
+    public String doDiffByMycardTradeNo(String myCardTradeNo) {
+        String result = assembleDiffResult(payInfoDao.getMycardTrade(myCardTradeNo));
 
-        String myCardTradeNo = trim(body); //request.queryParams("MyCardTradeNo");
-        if (!myCardTradeNo.contains("MyCardTradeNo")) {
-            String[] array = myCardTradeNo.split("&");
-            if (array.length != 2) {
-                logger.info("Mycard_Diff {} DateErr", body);
-                return "";
-            }
-            String startDateTimeStr = array[0]; //request.queryParams("StartDateTime");
-            String endDateTimeStr = array[1]; //request.queryParams("EndDateTime");
-            array = startDateTimeStr.split("=");
-            if (array.length != 2) {
-                logger.info("Mycard_Diff {} startDateTimeStrErr", body);
-                return "";
-            }
-            startDateTimeStr = array[1];
-            array = endDateTimeStr.split("=");
-            if (array.length != 2) {
-                logger.info("Mycard_Diff {} endDateTimeStrErr", body);
-                return "";
-            }
-            endDateTimeStr = array[1];
+        logger.info("Mycard_Diff {} {}", myCardTradeNo, result);
+        return result;
+    }
 
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                Date startDateTime = sdf.parse(startDateTimeStr);
-                Date endDateTime = sdf.parse(endDateTimeStr);
+    public String doDiffByDate(String startDateTimeStr, String endDateTimeStr) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            Date startDateTime = sdf.parse(startDateTimeStr);
+            Date endDateTime = sdf.parse(endDateTimeStr);
 
-                sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                startDateTimeStr = sdf.format(startDateTime);
-                endDateTimeStr = sdf.format(endDateTime);
-            } catch (ParseException ex) {
-                ex.printStackTrace();
+            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            startDateTimeStr = sdf.format(startDateTime);
+            endDateTimeStr = sdf.format(endDateTime);
+        } catch (ParseException ex) {
+            ex.printStackTrace();
 
-                logger.info("Mycard_Diff {} {}", body, ex);
-                return "";
-            }
-
-            results = payInfoDao.getMycardTrades(startDateTimeStr, endDateTimeStr);
-        } else {
-            String[] array = myCardTradeNo.split("=");
-            if (array.length != 2) {
-                logger.info("Mycard_Diff {} myCardTradeNoErr", body);
-                return "";
-            }
-            myCardTradeNo = array[1];
-            results = payInfoDao.getMycardTrade(myCardTradeNo);
+            logger.info("Mycard_Diff {} {} {}", startDateTimeStr, endDateTimeStr, ex);
+            return "";
         }
 
+        String result = assembleDiffResult(payInfoDao.getMycardTrades(startDateTimeStr, endDateTimeStr));
+        logger.info("Mycard_Diff {} {} {}", startDateTimeStr, endDateTimeStr, result);
+        return result;
+    }
+
+    private String assembleDiffResult(List<Map<String, Object>> results) {
+        String result = "<BR>";
         if (results != null) {
             for (Map map : results) {
                 result += (String) map.get("paymentType") + ',';
@@ -427,7 +405,6 @@ public class MycardPayService {
             }
         }
 
-        logger.info("Mycard_Diff {} {}", body, result);
         return result;
     }
 

@@ -40,14 +40,4 @@ public class PayController {
     public MycardCompleteRsp onMycardComplete(@RequestBody MycardCompleteReq req) {
         return mycardPayService.doComplete(req);
     }
-
-    @RequestMapping(value = "/mycard/notify", method = RequestMethod.POST)
-    public String onMycardNotify(@RequestBody String body) {
-        return mycardPayService.doNotify(body);
-    }
-
-    @RequestMapping(value = "/mycard/diff", method = RequestMethod.POST)
-    public String onMycardDiff(@RequestBody String body) {
-        return mycardPayService.doDiff(body);
-    }
 }
