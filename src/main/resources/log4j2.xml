@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+    <properties>
+        <property name="LOG_HOME">log</property>
+    </properties>
+
+    <!-- 输出目的地集合 -->
+    <appenders>
+        <console name="Console" target="SYSTEM_OUT">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+
+            <!--输出日志的格式  时间 级别 logername 信息-->
+            <patternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n" />
+        </console>
+
+        <!-- 帐号操作记录 -->
+        <RollingRandomAccessFile name="auth" fileName="${LOG_HOME}/auth.log"
+                                 filePattern="${LOG_HOME}/auth-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+        <!-- 支付 -->
+        <RollingRandomAccessFile name="pay" fileName="${LOG_HOME}/pay.log"
+                                 filePattern="${LOG_HOME}/pay-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- 每隔6小时扫描一次，当文件大小超过250MB时进行备份 -->
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+            <!-- 每天可以备份20个文件 -->
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+        <!-- 推送结果 -->
+        <RollingRandomAccessFile name="push" fileName="${LOG_HOME}/push.log"
+                                 filePattern="${LOG_HOME}/push-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- 每隔6小时扫描一次，当文件大小超过250MB时进行备份 -->
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+            <!-- 每天可以备份20个文件 -->
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+        <!-- admin -->
+        <RollingRandomAccessFile name="admin" fileName="${LOG_HOME}/admin.log"
+                                 filePattern="${LOG_HOME}/admin-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- 每隔6小时扫描一次，当文件大小超过250MB时进行备份 -->
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+            <!-- 每天可以备份20个文件 -->
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+    </appenders>
+
+    <loggers>
+        <Logger name="com.seastar.service.LoginService" level="debug" additivity="false" >
+            <appenderRef ref="auth" />
+        </Logger>
+
+        <Logger name="com.seastar.service.OtherAuthService" level="debug" additivity="false" >
+            <appenderRef ref="auth" />
+        </Logger>
+
+        <Logger name="com.seastar.service.MycardPayService" level="debug" additivity="false" >
+            <appenderRef ref="pay" />
+        </Logger>
+
+        <Logger name="com.seastar.service.OfficalPayService" level="debug" additivity="false" >
+            <appenderRef ref="pay" />
+        </Logger>
+
+        <Logger name="com.seastar.task.push.PushTask" level="debug" additivity="false" >
+            <appenderRef ref="push" />
+        </Logger>
+
+        <Logger name="com.seastar.web.AdminController" level="debug" additivity="false" >
+            <appenderRef ref="admin" />
+        </Logger>
+
+        <root level="info">
+            <appenderRef ref="Console" />
+        </root>
+    </loggers>
+
+</Configuration>

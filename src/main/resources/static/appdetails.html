@@ -1,0 +1,82 @@
+<div class="row">
+    <!-- left column -->
+    <div class="col-md-offset-3 col-md-6">
+        <!-- general form elements -->
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">应用信息</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+            <form role="form">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label for="appId">应用ID</label>
+                        <input type="text" class="form-control" id="appId" placeholder="" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label for="appName">应用名称</label>
+                        <input type="text" class="form-control" id="appName" placeholder="" />
+                    </div>
+                    <div class="form-group">
+                        <label>应用状态</label>
+                        <select class="form-control" id="status">
+                            <option value="0" selected>等待审核</option>
+                            <option value="1">审核通过</option>
+                            <option value="2">上架</option>
+                            <option value="3">下架</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="createTime">创建时间</label>
+                        <input type="text" class="form-control" id="createTime" placeholder="" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label for="appKey">App Key</label>
+                        <input type="text" class="form-control" id="appKey" placeholder="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="appSecret">App Secret</label>
+                        <input type="text" class="form-control" id="appSecret" placeholder="" />
+                    </div>
+                    <div class="form-group">
+                        <label>沙盒</label>
+                        <select class="form-control" id="sandbox">
+                            <option value="1" selected>是</option>
+                            <option value="0">否</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="version">当前版本</label>
+                        <input type="text" class="form-control" id="version" placeholder="1.0" />
+                    </div>
+                    <div class="form-group">
+                        <label for="notifyUrl">发货地址</label>
+                        <input type="text" class="form-control" id="notifyUrl" placeholder="http://" />
+                    </div>
+                    <div class="form-group">
+                        <label>内购方式</label>
+                        <select class="form-control" id="payType">
+                            <option value="0" selected>无</option>
+                            <option value="1">Google</option>
+                            <option value="3">Apple</option>
+                            <option value="2">Mycard</option>
+                            <option value="4">Google&MyCard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>谷歌支付密钥</label>
+                        <textarea class="form-control" rows="3" placeholder="" id="googleKey"></textarea>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+
+                <div class="box-footer">
+                    <button type="button" class="btn btn-primary" onclick="doAppModify();">Submit</button>
+                    <button type="button" class="btn btn-primary" onclick="doGetAppList();">Back</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.box -->
+    </div>
+</div>
