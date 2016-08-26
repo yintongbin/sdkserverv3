@@ -12,7 +12,7 @@ import java.nio.CharBuffer;
  * Created by wjl on 2016/8/25.
  */
 public class PushResponseConsumer extends AsyncCharConsumer<String> {
-    private StringBuilder builder = new StringBuilder();
+    private StringBuffer sbuf = new StringBuffer();
 
     @Override
     protected void onResponseReceived(final HttpResponse response) {
@@ -20,8 +20,7 @@ public class PushResponseConsumer extends AsyncCharConsumer<String> {
 
     @Override
     protected void onCharReceived(final CharBuffer buf, final IOControl ioctrl) throws IOException {
-        if (buf.hasArray())
-            builder.append(buf.array());
+        sbuf.append(buf);
     }
 
     @Override
@@ -30,6 +29,6 @@ public class PushResponseConsumer extends AsyncCharConsumer<String> {
 
     @Override
     protected String buildResult(final HttpContext context) {
-        return builder.toString();
+        return sbuf.toString();
     }
 }
