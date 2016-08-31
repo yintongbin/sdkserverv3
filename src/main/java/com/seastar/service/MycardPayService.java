@@ -57,6 +57,8 @@ public class MycardPayService {
 
     private Logger logger = LogManager.getLogger(MycardPayService.class);
 
+    private final static int TRADE_ALIVE_DAY = 15;
+
     public MycardReqAuthCodeRsp doReqAuthCode(MycardReqAuthCodeReq req) {
         if (req.cparam.length() > 250 ||
                 req.session.isEmpty() ||
@@ -196,7 +198,7 @@ public class MycardPayService {
                 node.put("cparam", req.cparam);
                 node.put("payStatus", 0); // 0-未完成 1-已经完成并入库 2-已经完成但入库失败
 
-                redisTemplate.opsForValue().set("mycard" + node.get("facTradeSeq").asText(), mapper.writeValueAsString(node), 7, TimeUnit.DAYS);
+                redisTemplate.opsForValue().set("mycard" + node.get("facTradeSeq").asText(), mapper.writeValueAsString(node), TRADE_ALIVE_DAY, TimeUnit.DAYS);
 
                 logger.info("MyCard_ReqAuthCode {} {} {} OK", AppUtils.serialize(req), mapper.writeValueAsString(node), response);
 
@@ -539,14 +541,14 @@ public class MycardPayService {
 
         if (!payInfoDao.insertOfficalPay(pmodel)) {
             ((ObjectNode)trade).put("payStatus", 2);// 0-未完成 1-已经完成并入库 2-已经完成但入库失败
-            redisTemplate.opsForValue().set("mycard" + trade.get("facTradeSeq").asText(), mapper.writeValueAsString(trade), 7, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set("mycard" + trade.get("facTradeSeq").asText(), mapper.writeValueAsString(trade), TRADE_ALIVE_DAY, TimeUnit.DAYS);
 
             logger.info("Mycard_SaveTrade {} DBErr", pmodel);
             return false;
         }
 
         ((ObjectNode)trade).put("payStatus", 1);// 0-未完成 1-已经完成并入库 2-已经完成但入库失败
-        redisTemplate.opsForValue().set("mycard" + trade.get("facTradeSeq").asText(), mapper.writeValueAsString(trade), 7, TimeUnit.DAYS);
+        redisTemplate.opsForValue().set("mycard" + trade.get("facTradeSeq").asText(), mapper.writeValueAsString(trade), TRADE_ALIVE_DAY, TimeUnit.DAYS);
 
         if (!app.notifyUrl.isEmpty()) {
             pushTask.submit(app.notifyUrl, pmodel, app.appSecret);

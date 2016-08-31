@@ -37,12 +37,12 @@ public class LoginController {
     }
 
     @RequestMapping(value = "/auth/loginverify", method = RequestMethod.POST)
-    public LoginVerifyRsp onLoginVerify(LoginVerifyReq req) {
+    public LoginVerifyRsp onLoginVerify(@RequestBody LoginVerifyReq req) {
         return loginService.doLoginVerify(req);
     }
 
     @RequestMapping(value = "/auth/logout", method = RequestMethod.POST)
-    public BaseRsp onLoginout(LogoutReq req) {
+    public BaseRsp onLoginout(@RequestBody LogoutReq req) {
         return loginService.doLogout(req);
     }
 

@@ -16,13 +16,13 @@ public class MycardController {
     @Autowired
     private MycardPayService mycardPayService;
 
-    @RequestMapping(value = "/mycard/notify/test", method = RequestMethod.POST)
+    @RequestMapping(value = "/mycard/notify", method = RequestMethod.POST)
     @ResponseBody
     public String onMycardNotify(@RequestParam(value = "DATA") String body) {
         return mycardPayService.doNotify(body);
     }
 
-    @RequestMapping(value = "/mycard/cmp/test", method = RequestMethod.POST)
+    @RequestMapping(value = "/mycard/cmp", method = RequestMethod.POST)
     @ResponseBody
     public String onMycardDiff(HttpServletRequest request) {
         if (request.getParameter("MyCardTradeNo") != null) {

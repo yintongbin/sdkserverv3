@@ -1,8 +1,10 @@
 package com.seastar.task.push;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.seastar.comm.AppUtils;
+import com.seastar.comm.Const;
 import com.seastar.domain.PayInfo;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.concurrent.FutureCallback;
@@ -14,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +40,9 @@ public class PushTask {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private ConcurrentHashMap<String, String> operativeDataMap = new ConcurrentHashMap<>();
     private PriorityBlockingQueue<PushItem> blockingQueue;
@@ -69,32 +76,52 @@ public class PushTask {
 
     @Async
     public void submit(String url, PayInfo payInfo, String appSecret) {
-        // 提取附赠数据
-        String key = payInfo.appId + payInfo.productId;
-        String value = operativeDataMap.get(key);
-
         String coin = "0";
         String giveCoin = "0";
         String money = "0";
-        if (value == null) {
+        String productId = payInfo.productId;
+        // 提取附赠数据
+        if (payInfo.channelType == Const.PAY_CHANNEL_MYCARD) {
+            // 首先获取数据，查看是否有活动
+            String result = redisTemplate.opsForValue().get("mycard" + payInfo.order);
+            if (result != null) {
+                try {
+                    JsonNode trade = mapper.readTree(result);
+                    String promoCode = trade.get("promoCode").asText();
+                    if (!promoCode.isEmpty()) {
+                        // 提取活动码对应的充值活动
+                        productId = productId + promoCode; // 此处一定要记着，活动码是跟其他活动混在t_operative里面的
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        String key = payInfo.appId + productId;
+        String result = redisTemplate.opsForValue().get("push" + key);
+        if (result != null) {
+            try {
+                JsonNode operative = mapper.readTree(result);
+                coin = operative.get("virtualCoin").asText();
+                giveCoin = operative.get("giveVirtualCoin").asText();
+                money = operative.get("money").asText();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
             try {
                 Map<String, Object> resultMap =
                         jdbcTemplate.queryForMap("select virtualCoin, giveVirtualCoin, money from t_operative where appId=? and productId=?",
-                        payInfo.appId, payInfo.productId);
+                                payInfo.appId, productId);
 
                 coin = (String) resultMap.get("virtualCoin");
                 giveCoin = (String) resultMap.get("giveVirtualCoin");
                 money = (String) resultMap.get("money");
-                operativeDataMap.put(key, coin + "," + giveCoin + money);
-            } catch (DataAccessException ex) {
+
+                redisTemplate.opsForValue().set("push" + key, mapper.writeValueAsString(resultMap), 30, TimeUnit.DAYS);
+            } catch (DataAccessException | IOException ex) {
                 ex.printStackTrace();
-            }
-        } else {
-            String[] arr = value.split(",");
-            if (arr.length == 3) {
-                coin = arr[0];
-                giveCoin = arr[1];
-                money = arr[2];
             }
         }
 
