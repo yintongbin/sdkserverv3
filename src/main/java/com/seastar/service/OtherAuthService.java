@@ -11,8 +11,17 @@ import com.seastar.entity.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
 
 /**
  * Created by wjl on 2016/8/23.
@@ -27,6 +36,16 @@ public class OtherAuthService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Value("${spring.mail.host}")
+    private String mailhost;
+
+    @Value("${spring.mail.username}")
+    private String mailusername;
+
+    @Value("${spring.mail.password}")
+    private String mailpassword;
+
 
     private Logger logger = LogManager.getLogger(OtherAuthService.class);
 
@@ -266,9 +285,63 @@ public class OtherAuthService {
         logger.info("FindPwd {} Ok", AppUtils.serialize(req));
 
         // 发送邮件
-
+        mailSend("密码找回", "您的账号为:" + account.userName + "   密码为:" + account.password, account.email);
         return rsp;
     }
+
+
+    @Async
+    public void mailSend(String title,String content,String toemail)  {
+
+        try {
+            Properties prop = new Properties();
+            prop.setProperty("mail.host", "smtp.sohu.com");
+            prop.setProperty("mail.transport.protocol", "smtp");
+            prop.setProperty("mail.smtp.auth", "true");
+            //使用JavaMail发送邮件的5个步骤
+            //1、创建session
+            Session session = Session.getInstance(prop);
+            //开启Session的debug模式，这样就可以查看到程序发送Email的运行状态
+            session.setDebug(true);
+            //2、通过session得到transport对象
+            Transport ts = session.getTransport();
+            //3、使用邮箱的用户名和密码连上邮件服务器，发送邮件时，发件人需要提交邮箱的用户名和密码给smtp服务器，用户名和密码都通过验证之后才能够正常发送邮件给收件人。
+            ts.connect(mailhost, mailusername, mailpassword);
+            //4、创建邮件
+            Message message = createSimpleMail(session,title,content,toemail);
+            //5、发送邮件
+            ts.sendMessage(message, message.getAllRecipients());
+            ts.close();
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * @Method: createSimpleMail
+     * @Description: 创建一封只包含文本的邮件
+     * @param session
+     * @return
+     * @throws Exception
+     */
+    public MimeMessage createSimpleMail(Session session, String title , String content, String toemail)
+            throws Exception {
+        //创建邮件对象
+        MimeMessage message = new MimeMessage(session);
+        //指明邮件的发件人
+        message.setFrom(new InternetAddress(mailusername));
+        //指明邮件的收件人，现在发件人和收件人是一样的，那就是自己给自己发
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(toemail));
+        //邮件的标题
+        message.setSubject(title);
+        //邮件的文本内容
+        message.setContent(content, "text/html;charset=UTF-8");
+        //返回创建好的邮件对象
+        return message;
+    }
+
 
     public BaseRsp doUnBind(UnBindReq req) {
         if (req.session.isEmpty() ||
